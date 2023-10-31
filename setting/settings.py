@@ -36,6 +36,11 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+
+    #Theme
+    'jazzmin',
+
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +50,7 @@ INSTALLED_APPS = [
 
     #local APP
     'user',
+    'shared'
 ]
 
 MIDDLEWARE = [
@@ -76,6 +82,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'setting.wsgi.application'
+
 
 
 # Database
@@ -128,8 +135,145 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'user.User'
+#Jazzmin Full example
+JAZZMIN_SETTINGS = {
+    # Ilovani sarlavhasi (agar mavjud bo'lmasa yoki None bo'lsa, u current_admin_site.site_title bilan taqdim etiladi)
+    "site_title": "Kutubxonaga Admin",
+
+    # Kirish ekranining sarlavhasi (19 belgiga to'g'ri keladi) (agar mavjud bo'lmasa yoki None bo'lsa, u current_admin_site.site_header bilan taqdim etiladi)
+    "site_header": "Jazzmin",
+
+    # Brend sarlavhasi (19 belgiga to'g'ri keladi) (agar mavjud bo'lmasa yoki None bo'lsa, u current_admin_site.site_header bilan taqdim etiladi)
+    "site_brand": "Kutubxona",
+
+    # Saytingiz uchun logotip, uning static fayllarida mavjud bo'lishi kerak, yuqoridagi chap tomondagi brend uchun ishlatiladi
+    "site_logo": "images/ulkanov.png",
+
+    # Kirish shakli uchun ishlatiladigan logotip (agar mavjud bo'lmasa, u site_logo bilan taqdim etiladi)
+    "login_logo": "images/ulkanov.png",
+
+    # Tungi mavzu uchun kirish shakli uchun ishlatiladigan logotip (agar mavjud bo'lmasa, u login_logo bilan taqdim etiladi)
+    "login_logo_dark": "images/ulkanov.png",
+
+    # Logotipning ustiga qo'llaniladigan CSS sinflari
+    "site_logo_classes": "img-circle",
+
+    # Saytingiz uchun faviconning yo'lni taqdim etish (agar mavjud bo'lmasa, u site_logo bilan taqdim etiladi) (ideally 32x32 px)
+    "site_icon": "images/ulkanov.png",
+
+    # Kirish ekranining quyidagi matni
+    "welcome_sign": "Jazzminga xush kelibsiz",
+
+    # Uchirishni astidan jamlanish
+    "copyright": "Izzatbek Ulkanov",
+
+    # Qidiruv sahifasidan qidirish uchun model adminlarining ro'yxati, agar bitta qidiruv maydonini ishlatmoqchi bo'lsangiz, o'zgaruvchini oddiy satr sifatida ishlatishingiz mumkin
+    "search_model": ["auth.User", "auth.Group"],
+
+    # Foydalanuvchi modelidagi avataringa o'tadigan maydon nomi ImageField/URLField/Charfield yoki foydalanuvchi olishi kerak
+    "user_avatar": None,
+
+    ############
+    # Yuqori Menyu #
+    ############
+
+    # Yuqori menyuga qo'shiladigan havolalar
+    "topmenu_links": [
+
+        # Qayta qilinadigan URL (huquqlar qo'shish mumkin)
+        {"name": "Bosh sahifa", "url": "admin:index", "permissions": ["auth.view_user"]},
+
+        # yangi oyna ochadigan tashqi URL (huquqlar qo'shish mumkin)
+        {"name": "Yordam", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
+
+        # model adminni ulashish uchun (modelga huquqlar qo'shish mumkin)
+        {"model": "auth.User"},
+
+        # Appning dropdown menyusi bo'lgan barcha model sahifalari uchun (modelga huquqlar qo'shish mumkin)
+        {"app": "books"},
+    ],
+
+    #############
+    # Foydalanuvchi Menyusi #
+    #############
+
+    # Yuqori o'ng tomondagi foydalanuvchi menyusiga qo'shiladigan qo'shimcha havolalar ("app" URL turi ruxsat berilmagan)
+    "usermenu_links": [
+        {"name": "Yordam", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
+        {"model": "auth.user"}
+    ],
+
+    #############
+    # Yon Menyu #
+    #############
+
+    # Yon menyuning ko'rsatiladimi yoki yo'qmi
+    "show_sidebar": True,
+
+    # Menyuning avtomatik kengayishi yoki yo'qmi
+    "navigation_expanded": True,
+
+    # Yon menyuning generatsiyada olib tashlashi kerak bo'lgan dasturlar (masalan, auth)
+    "hide_apps": [],
+
+    # Yon menyuning generatsiyada olib tashlashi kerak bo'lgan modellar (masalan, auth.user)
+    "hide_models": [],
+
+    # Yon menyuning tartibini tuzish uchun dasturlar (va/va yoki modellar) ro'yxati (barcha dasturlarni/modellarni o'z ichiga olish zarur emas)
+    "order_with_respect_to": ["auth", "books", "books.author", "books.book"],
+
+    # App guruhi yo'lni boshqarish uchun qo'shimcha havolalar, app nomiga qarab tartiblangan
+    "custom_links": {
+        "books": [{
+            "name": "Xabarlar yaratish",
+            "url": "make_messages",
+            "icon": "fas fa-comments",
+            "permissions": ["books.view_book"]
+        }]
+    },
+
+    # Yon menyu dasturlar/modellarni uchun maxsus ikonlar Ko'rish https://fontawesome.com/icons?d=gallery&m=free&v=5.0.0,5.0.1,5.0.10,5.0.11,5.0.12,5.0.13,5.0.2,5.0.3,5.0.4,5.0.5,5.0.6,5.0.7,5.0.8,5.0.9,5.1.0,5.1.1,5.2.0,5.3.0,5.3.1,5.4.0,5.4.1,5.4.2,5.13.0,5.12.0,5.11.2,5.11.1,5.10.0,5.9.0,5.8.2,5.8.1,5.7.2,5.7.1,5.7.0,5.6.3,5.5.0,5.4.2 uchun to'liq ro'yxatni
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    # Maxsus ikonlar manuel aniqlanmasa ishlatiladigan ikonlar
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    #################
+    # Bog'liq Modal #
+    #################
+    # Popup o'rniga modal ishlatish
+    "related_modal_active": False,
+
+    #############
+    # UI O'zgartirishlar #
+    #############
+    # Maxsus CSS/JS skriptlarning yo'l joylash (ular static fayllarda mavjud bo'lishi kerak)
+    "custom_css": None,
+    "custom_js": None,
+    # Fonts.googleapis.com sahifasidan o'zgaruvchiga ulanishni xohlash (fontni taqdim etish uchun custom_css ni ishlatish mumkin)
+    "use_google_fonts_cdn": True,
+    # Yuqori panjara o'zgartiruvchisini yon menyuda ko'rsatish
+    "show_ui_builder": False,
+
+    ###############
+    # O'zgartirishni ko'rsatish #
+    ###############
+    # O'zgartirishni yagona shakl yoki tablar sifatida ko'rsatish (hozirgi parametrlar: single, horizontal_tabs (defolt), vertical_tabs, collapsible, carousel)
+    "changeform_format": "horizontal_tabs",
+    # modeladmin asosida o'zgartirish shaklini o'zgartirish
+    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+    # Ma'muriyatni saytning ichki tilini o'zgartirish uchun tarjima bo'limi qo'shish
+    "language_chooser": False,
+}
