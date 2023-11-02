@@ -49,22 +49,64 @@ INSTALLED_APPS = [
 
     #packages
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'phonenumbers',
+    'twilio',
 
 
     #local APP
-    'user',
+    'users',
     'shared'
 ]
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=15),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": "",
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JSON_ENCODER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+
+    "JTI_CLAIM": "jti",
+
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
+    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
+    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
+    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+REST_FRAMEWORK ={
+    'DEFAULT_PERMISSION_CLASSES': [
+        "rest_framework.permissions.IsAuthenticated", ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    ]
 }
 
 MIDDLEWARE = [
@@ -82,7 +124,7 @@ ROOT_URLCONF = 'setting.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -136,9 +178,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'uz'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
 
@@ -156,7 +198,11 @@ MEDIA_ROOT = BASE_DIR / 'media/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'user.User'
+AUTH_USER_MODEL = 'users.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 #Jazzmin Full example
 JAZZMIN_SETTINGS = {
     # Ilovani sarlavhasi (agar mavjud bo'lmasa yoki None bo'lsa, u current_admin_site.site_title bilan taqdim etiladi)
@@ -222,7 +268,7 @@ JAZZMIN_SETTINGS = {
     # Yuqori o'ng tomondagi foydalanuvchi menyusiga qo'shiladigan qo'shimcha havolalar ("app" URL turi ruxsat berilmagan)
     "usermenu_links": [
         {"name": "Yordam", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
-        {"model": "auth.user"}
+        {"model": "auth.users"}
     ],
 
     #############
@@ -238,7 +284,7 @@ JAZZMIN_SETTINGS = {
     # Yon menyuning generatsiyada olib tashlashi kerak bo'lgan dasturlar (masalan, auth)
     "hide_apps": [],
 
-    # Yon menyuning generatsiyada olib tashlashi kerak bo'lgan modellar (masalan, auth.user)
+    # Yon menyuning generatsiyada olib tashlashi kerak bo'lgan modellar (masalan, auth.users)
     "hide_models": [],
 
     # Yon menyuning tartibini tuzish uchun dasturlar (va/va yoki modellar) ro'yxati (barcha dasturlarni/modellarni o'z ichiga olish zarur emas)
@@ -257,7 +303,7 @@ JAZZMIN_SETTINGS = {
     # Yon menyu dasturlar/modellarni uchun maxsus ikonlar Ko'rish https://fontawesome.com/icons?d=gallery&m=free&v=5.0.0,5.0.1,5.0.10,5.0.11,5.0.12,5.0.13,5.0.2,5.0.3,5.0.4,5.0.5,5.0.6,5.0.7,5.0.8,5.0.9,5.1.0,5.1.1,5.2.0,5.3.0,5.3.1,5.4.0,5.4.1,5.4.2,5.13.0,5.12.0,5.11.2,5.11.1,5.10.0,5.9.0,5.8.2,5.8.1,5.7.2,5.7.1,5.7.0,5.6.3,5.5.0,5.4.2 uchun to'liq ro'yxatni
     "icons": {
         "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
+        "auth.users": "fas fa-users",
         "auth.Group": "fas fa-users",
     },
     # Maxsus ikonlar manuel aniqlanmasa ishlatiladigan ikonlar
@@ -287,7 +333,7 @@ JAZZMIN_SETTINGS = {
     # O'zgartirishni yagona shakl yoki tablar sifatida ko'rsatish (hozirgi parametrlar: single, horizontal_tabs (defolt), vertical_tabs, collapsible, carousel)
     "changeform_format": "horizontal_tabs",
     # modeladmin asosida o'zgartirish shaklini o'zgartirish
-    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+    "changeform_format_overrides": {"auth.users": "collapsible", "auth.group": "vertical_tabs"},
     # Ma'muriyatni saytning ichki tilini o'zgartirish uchun tarjima bo'limi qo'shish
     "language_chooser": False,
 }
