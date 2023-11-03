@@ -5,13 +5,12 @@ from django.core.validators import FileExtensionValidator
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import AccessToken
-
 from shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
 from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, CODE_VERIFIED, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
 from rest_framework import exceptions, permissions
 from django.db.models import Q
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -233,4 +232,19 @@ class logoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
 class ForgotPasswordSerializer(serializers.Serializer):
-    email_or_phone
+    email_or_phone = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        email_or_phone = data.get('email_or_phone', None)
+        if email_or_phone is None:
+            raise ValidationError(
+                {
+                    "success": False,
+                    "message": "email yoki telefon raqam kiritilishi shart"
+                }
+            )
+        user = User.objects.filter(Q(phone_number=email_or_phone) | Q(email=email_or_phone))
+        if not user.exists():
+            raise NotFound(detail="User is not found")
+        data['user'] = user.first()
+        return data

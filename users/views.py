@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.utils.datetime_safe import datetime
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
@@ -10,10 +9,10 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from shared.utility import send_email
+from shared.utility import send_email, check_email_or_phone
+from .models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer, \
-    LoginRefreshToken, logoutSerializer
-from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
+    LoginRefreshToken, logoutSerializer, ForgotPasswordSerializer
 
 
 # Create your views here.
@@ -22,9 +21,9 @@ class CreateUserView(CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny, )
     serializer_class = SignUpSerializer
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = (IsAuthenticated)
 class VerifyAPIView(APIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user             # user ->
@@ -151,3 +150,27 @@ class logoutView(APIView):
         except TokenError:
             return Response(status=400)
 
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = ForgotPasswordSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        email_or_phone = serializer.validated_data.get('email_or_phone')
+        user = serializer.validated_data.get('user')
+        if check_email_or_phone(email_or_phone) == 'phone':
+            code = user.create_verify_code(VIA_PHONE)  # (VIA_PHONE) ni o'chirib tashlang
+            send_email(email_or_phone, code)
+        elif check_email_or_phone(email_or_phone) == 'email':
+            code = user.create_verify_code(VIA_EMAIL)  # (VIA_EMAIL) ni o'chirib tashlang
+            send_email(email_or_phone, code)
+        return Response(
+            {
+                "success": True,
+                "message": "Tasdiqlash kodi muvaffaqiyatli yuborildi",
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token'],
+                "user_status": user.auth_status,
+            }, status=200
+        )
