@@ -6,9 +6,13 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from shared.utility import send_email
-from .serializers import SignUpSerializer, ChangeUserInformation
+from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer, \
+    LoginRefreshToken, logoutSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 
 
@@ -109,4 +113,41 @@ class ChangeUserInformationView(UpdateAPIView):
 
         }
         return Response(data, status=200)
+
+class ChangeUserPhotoSerializerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        serializer = ChangeUserPhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            serializer.update(user, serializer.validated_data)
+            return Response({
+                "message": "Rasm muvaffaqiyatli o'zgartirildi"
+            }, status=200)
+        return Response(
+            serializer.errors, status=400
+        )
+class LoginView(TokenObtainPairView):
+    serializer_class = LoginSerializer
+class LoginRefreshView(TokenRefreshView):
+    serializer_class = LoginRefreshToken
+class logoutView(APIView):
+    serializer_class = logoutSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            refresh_token = self.request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            data = {
+                "success": True,
+                "message": "You are Loggout out"
+            }
+            return Response(data, status=205)
+        except TokenError:
+            return Response(status=400)
 
