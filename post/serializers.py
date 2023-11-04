@@ -35,7 +35,6 @@ class PostSerializer(serializers.ModelSerializer):
             "image",
             "caption",
             "created_time",
-            "post_likes",
             "post_likes_count",
             "post_comment_count",
             "me_liked"
@@ -55,7 +54,7 @@ class PostSerializer(serializers.ModelSerializer):
             try:
                 PostLike.objects.get(post=obj, author=request.user)
                 return True
-            except PostLike.DoesNoExist:
+            except PostLike.DoesNotExist:
                 return False
 
 
