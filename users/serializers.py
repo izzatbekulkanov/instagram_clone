@@ -5,9 +5,8 @@ from django.core.validators import FileExtensionValidator
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import AccessToken
-from shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
-from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, CODE_VERIFIED, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
-from rest_framework import exceptions, permissions
+from shared.utility import check_email_or_phone, send_email, check_user_type
+from .models import User, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
@@ -29,6 +28,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             'auth_type': {'read_only': True, 'required': False},
             'auth_status': {'read_only': True, 'required': False}
         }
+
     def create(self, validated_data):
         user = super(SignUpSerializer, self).create(validated_data)
         if user.auth_type == VIA_EMAIL:
@@ -40,7 +40,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             # send_phone_code(user.phone_number, code)
         user.save()
         return user
-        permission_classes = [permissions.AllowAny]
+
     def validate(self, data):
         super(SignUpSerializer, self).validate(data)
         data = self.auth_validate(data)
@@ -50,7 +50,8 @@ class SignUpSerializer(serializers.ModelSerializer):
     def auth_validate(data):
         print(data)
         user_input = str(data.get('email_phone_number')).lower()
-        input_type = check_email_or_phone(user_input) # email or phone
+        input_type = check_email_or_phone(user_input)
+
         if input_type == "email":
             data = {
                 "email": user_input,
@@ -70,7 +71,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
         return data
 
-    def validate_email_phone_number(self, value):
+    @staticmethod
+    def validate_email_phone_number(value):
         value = value.lower()
         if value and User.objects.filter(email=value).exists():
             data = {
@@ -92,6 +94,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         data.update(instance.token())
 
         return data
+
 
 class ChangeUserInformation(serializers.Serializer):
     first_name = serializers.CharField(write_only=True, required=True)
@@ -115,7 +118,8 @@ class ChangeUserInformation(serializers.Serializer):
 
         return data
 
-    def validate_username(self, username):
+    @staticmethod
+    def validate_username(username):
         if len(username) < 5 or len(username) > 30:
             raise ValidationError(
                 {
@@ -129,6 +133,7 @@ class ChangeUserInformation(serializers.Serializer):
                 }
             )
         return username
+
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
@@ -140,6 +145,8 @@ class ChangeUserInformation(serializers.Serializer):
             instance.auth_status = DONE
         instance.save()
         return instance
+
+
 class ChangeUserPhotoSerializer(serializers.Serializer):
     photo = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=[
         'jpg', 'jpeg', 'png', 'heic', 'heif'
@@ -152,6 +159,8 @@ class ChangeUserPhotoSerializer(serializers.Serializer):
             instance.auth_status = PHOTO_DONE
             instance.save()
         return instance
+
+
 class LoginSerializer(TokenObtainPairSerializer):
 
     def __init__(self, *args, **kwargs):
@@ -211,7 +220,8 @@ class LoginSerializer(TokenObtainPairSerializer):
         data['password'] = self.user.password
         return data
 
-    def get_user(self, **kwargs):
+    @staticmethod
+    def get_user(**kwargs):
         users = User.objects.filter(**kwargs)
         if not users.exists():
             raise ValidationError(
@@ -220,6 +230,8 @@ class LoginSerializer(TokenObtainPairSerializer):
                 }
             )
         return users.first()
+
+
 class LoginRefreshToken(TokenRefreshSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -228,8 +240,11 @@ class LoginRefreshToken(TokenRefreshSerializer):
         user = get_object_or_404(User, id=user_id)
         update_last_login(None, user)
         return data
-class logoutSerializer(serializers.Serializer):
+
+
+class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
 
 class ForgotPasswordSerializer(serializers.Serializer):
     email_or_phone = serializers.CharField(write_only=True, required=True)

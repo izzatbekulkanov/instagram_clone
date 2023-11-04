@@ -8,26 +8,26 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-
 from shared.utility import send_email, check_email_or_phone
 from .models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer, \
-    LoginRefreshToken, logoutSerializer, ForgotPasswordSerializer
+    LoginRefreshToken, LogoutSerializer, ForgotPasswordSerializer
 
 
 # Create your views here.
 
 class CreateUserView(CreateAPIView):
     queryset = User.objects.all()
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny, IsAuthenticated)
     serializer_class = SignUpSerializer
-    permission_classes = (IsAuthenticated)
-class VerifyAPIView(APIView):
-    permission_classes = (IsAuthenticated)
 
-    def post(self, request, *args, **kwargs):
-        user = self.request.user             # user ->
-        code = self.request.data.get('code') # 4083
+
+class VerifyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self):
+        user = self.request.user
+        code = self.request.data.get('code')
 
         self.check_verify(user, code)
         return Response(
@@ -54,9 +54,12 @@ class VerifyAPIView(APIView):
             user.auth_status = CODE_VERIFIED
             user.save()
         return True
+
+
 class GetNewVerification(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, *args, **kwargs):
+
+    def get(self):
         user = self.request.user
         self.check_verification(user)
         if user.auth_type == VIA_EMAIL:
@@ -76,6 +79,7 @@ class GetNewVerification(APIView):
                 "message": "Tasdiqlash kodingiz qaytadan yuborildi"
             }
         )
+
     @staticmethod
     def check_verification(user):
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), is_confirmed=False)
@@ -84,6 +88,7 @@ class GetNewVerification(APIView):
                 "message": "Kodingiz hali ham ishlatish uchun yaroqli. Iltimos biroz kuting"
             }
             raise ValidationError(data)
+
 
 class ChangeUserInformationView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
@@ -101,7 +106,7 @@ class ChangeUserInformationView(UpdateAPIView):
             "auth_status": self.request.user.auth_status
 
         }
-        return Response (data, status=200)
+        return Response(data, status=200)
 
     def partial_update(self, request, *args, **kwargs):
         super(ChangeUserInformationView, self).partial_update(request, *args, **kwargs)
@@ -113,10 +118,12 @@ class ChangeUserInformationView(UpdateAPIView):
         }
         return Response(data, status=200)
 
+
 class ChangeUserPhotoSerializerView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, *args, **kwargs):
+    @staticmethod
+    def put(request):
         serializer = ChangeUserPhotoSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
@@ -127,15 +134,21 @@ class ChangeUserPhotoSerializerView(APIView):
         return Response(
             serializer.errors, status=400
         )
+
+
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
+
+
 class LoginRefreshView(TokenRefreshView):
     serializer_class = LoginRefreshToken
-class logoutView(APIView):
-    serializer_class = logoutSerializer
+
+
+class LogoutView(APIView):
+    serializer_class = LogoutSerializer
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
+    def post(self):
         serializer = self.serializer_class(data=self.request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -150,11 +163,12 @@ class logoutView(APIView):
         except TokenError:
             return Response(status=400)
 
+
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     serializer_class = ForgotPasswordSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self):
         serializer = self.serializer_class(data=self.request.data)
         serializer.is_valid(raise_exception=True)
         email_or_phone = serializer.validated_data.get('email_or_phone')

@@ -38,7 +38,7 @@ class User(AbstractUser, BaseModel):
     email = models.EmailField(null=True, blank=True, unique=True)
     phone_number = models.CharField(max_length=13, null=True, blank=True, unique=True)
     photo = models.ImageField(upload_to='user_photos/', null=True, blank=True,
-                              validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'heic', 'heif'])])
+                              validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'heic'])])
 
     def __str__(self):
         return self.username
@@ -58,7 +58,7 @@ class User(AbstractUser, BaseModel):
 
     def check_username(self):
         if not self.username:
-            temp_username = f'instagram-{uuid.uuid4().__str__().split("-")[-1]}' # instagram-23324fsdf
+            temp_username = f'instagram-{uuid.uuid4().__str__().split("-")[-1]}'
             while User.objects.filter(username=temp_username):
                 temp_username = f"{temp_username}{random.randint(0,9)}"
             self.username = temp_username
@@ -70,7 +70,7 @@ class User(AbstractUser, BaseModel):
 
     def check_pass(self):
         if not self.password:
-            temp_password = f'password-{uuid.uuid4().__str__().split("-")[-1]}' #  123456mfdsjfkd
+            temp_password = f'password-{uuid.uuid4().__str__().split("-")[-1]}'
             self.password = temp_password
 
     def hashing_password(self):
@@ -93,6 +93,7 @@ class User(AbstractUser, BaseModel):
         self.check_username()
         self.check_pass()
         self.hashing_password()
+
 
 PHONE_EXPIRE = 2
 EMAIL_EXPIRE = 5
